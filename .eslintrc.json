@@ -1,0 +1,89 @@
+{
+  // "extends": ["@stic/eslint-config", "@stic/eslint-config/next-app"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "prettier"],
+  "parserOptions": {
+    "project": ["./tsconfig.json"]
+  },
+  "ignorePatterns": ["node_modules/"],
+  // ESLint 규칙 설정 확장
+  "extends": [
+    "airbnb",
+    "airbnb-typescript",
+    "next/core-web-vitals",
+    "next/typescript",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/recommended",
+    "plugin:prettier/recommended",
+    "prettier"
+  ],
+  "rules": {
+    "@next/next/no-img-element": "off",
+    "react/jsx-no-useless-fragment": "off", // <></> 와 같은 기본 Fragment 를 허용한다.
+    "@typescript-eslint/lines-between-class-members": "off", // 8.53.0 에서 부터 deprecated. class 와의 간격
+    "@typescript-eslint/no-throw-literal": "off", // throw 를 항상 Error Prototype 만
+    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }], //'tailwindcss' should be listed in the project's dependencies, not devDependencies.
+    "import/no-unresolved": "off",
+    "import/named": "off",
+    "react/jsx-props-no-spreading": "off",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "react/jsx-no-duplicate-props": "off",
+    "@typescript-eslint/no-use-before-define": "off",
+    "react/destructuring-assignment": "off",
+    "react/button-has-type": "off",
+    "jsx-a11y/click-events-have-key-events": "warn",
+    "react/require-default-props": "off",
+    "import/order": [
+      "error",
+      {
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index", "unknown"],
+        "newlines-between": "always",
+        "pathGroups": [
+          {
+            "pattern": "react*",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "next*",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "@stic/*",
+            "group": "external"
+          },
+          {
+            "pattern": "@{store, utils, routes, hooks}/**",
+            "group": "internal",
+            "position": "after"
+          },
+          {
+            "pattern": "@components/**",
+            "group": "internal",
+            "position": "after"
+          },
+          {
+            "pattern": "@{api, types, services}/**",
+            "group": "internal",
+            "position": "after"
+          },
+          {
+            "pattern": "@**",
+            "group": "internal",
+            "position": "after"
+          },
+          {
+            "pattern": "@{constants, assets, styles}/**",
+            "group": "unknown",
+            "position": "after"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": ["@stic*"],
+        "alphabetize": {
+          "order": "asc"
+        }
+      }
+    ]
+  }
+}
