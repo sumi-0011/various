@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@lib/utils';
 
 import { SchemaInfoType } from './schema';
 
@@ -110,43 +111,15 @@ function YupValidator(props: { schema: SchemaInfoType }) {
 
         {/* 입력 폼 */}
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="username">사용자명</Label>
-            <Input
-              id="username"
-              name="username"
-              value={inputs.username}
+          {Object.entries(props.schema.schema).map(([key]) => (
+            <InputItem
+              value={inputs[key as keyof typeof inputs]}
               onChange={handleInputChange}
-              className={errors.username ? 'border-red-500' : ''}
+              error={errors[key as keyof typeof errors]}
+              id={key}
+              key={key}
             />
-            {errors.username && <p className="mt-1 text-sm text-red-500">{errors.username}</p>}
-          </div>
-
-          <div>
-            <Label htmlFor="email">이메일</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={inputs.email}
-              onChange={handleInputChange}
-              className={errors.email ? 'border-red-500' : ''}
-            />
-            {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
-          </div>
-
-          <div>
-            <Label htmlFor="password">비밀번호</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              value={inputs.password}
-              onChange={handleInputChange}
-              className={errors.password ? 'border-red-500' : ''}
-            />
-            {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
-          </div>
+          ))}
 
           <Button onClick={handleValidate} className="w-full">
             검증하기
@@ -160,3 +133,25 @@ function YupValidator(props: { schema: SchemaInfoType }) {
 }
 
 export default YupValidator;
+
+function InputItem(props: {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error: string;
+  id: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={props.id}>{props.id}</Label>
+      <Input
+        id={props.id}
+        name={props.id}
+        type="password"
+        value={props.value}
+        onChange={props.onChange}
+        className={cn(props.error ? 'border-red-500' : '')}
+      />
+      {props.error && <p className="text-sm text-red-500">{props.error}</p>}
+    </div>
+  );
+}
