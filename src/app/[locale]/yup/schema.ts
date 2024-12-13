@@ -6,6 +6,7 @@ export type SchemaInfoType = {
   title: string;
   desc?: string;
   schema: SchemaType;
+  constants?: Record<string, unknown>;
 };
 
 export const schemaInfo: {
@@ -38,6 +39,27 @@ export const schemaInfo: {
     desc: '사용자명 검증',
     schema: {
       username: `yup.string().required('사용자명은 필수입니다').min(4, '사용자명은 최소 4자 이상이어야 합니다').max(20, '사용자명은 최대 20자까지 가능합니다')`,
+    },
+  },
+  required: {
+    title: '필수 입력',
+    desc: '필수 입력',
+    schema: {
+      required: `yup.string().required('필수 입력입니다')`,
+    },
+  },
+
+  file: {
+    title: '파일 검증',
+    desc: '파일 검증 최대 10MB',
+    constants: {
+      FILE_SIZE_MB: `10 * 1024 * 1024`,
+      SUPPORTED_FORMATS: `['image/jpg', 'image/jpeg', 'image/png', 'image/gif', 'application/pdf']`,
+    },
+    schema: {
+      file: `yup.mixed()
+    .test('fileSize', 'rest_api_file_exceeds_size_error', (value) => (value ? value.size <= FILE_SIZE_MB : true))
+    .test('fileType', 'rest_api_file_upload_error', (value) => (value ? SUPPORTED_FORMATS.includes(value.type) : true))`,
     },
   },
 };

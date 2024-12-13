@@ -13,10 +13,21 @@ import { cn } from '@lib/utils';
 
 import { SchemaInfoType } from './schema';
 
-const getSchemaString = (schema: SchemaInfoType['schema']) => {
-  const schemaString = Object.entries(schema)
+const getSchemaString = (schema: SchemaInfoType) => {
+  const schemaString = Object.entries(schema.schema)
     .map(([key, value]) => `  ${key}: ${value}`)
     .join(',\n');
+
+  const constString = Object.entries(schema.constants || {})
+    .map(([key, value]) => `const ${key} = ${value};`)
+    .join('\n');
+
+  if (constString) {
+    return `${constString}
+
+const schema = yup.object({\n${schemaString}\n});
+    `;
+  }
 
   return `const schema = yup.object({\n${schemaString}\n});`;
 };
@@ -33,7 +44,7 @@ function YupValidator(props: { schema: SchemaInfoType }) {
   const [isValid, setIsValid] = useState(false);
 
   // schemaCode를 state로 변경
-  const [schemaCode, setSchemaCode] = useState(getSchemaString(props.schema.schema));
+  const [schemaCode, setSchemaCode] = useState(getSchemaString(props.schema));
 
   // 입력값 변경 핸들러
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
