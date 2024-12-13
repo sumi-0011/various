@@ -14,10 +14,10 @@ import { SchemaInfoType } from './schema';
 
 const getSchemaString = (schema: SchemaInfoType['schema']) => {
   const schemaString = Object.entries(schema)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join('\n');
+    .map(([key, value]) => `  ${key}: ${value}`)
+    .join(',\n');
 
-  return `const schema = yup.object({${schemaString}});`;
+  return `const schema = yup.object({\n${schemaString}\n});`;
 };
 
 function YupValidator(props: { schema: SchemaInfoType }) {

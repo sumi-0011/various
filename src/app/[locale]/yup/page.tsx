@@ -16,7 +16,7 @@ export default function YupPage() {
     <div className="grid grid-cols-[400px_1fr] gap-4">
       <ScrollArea className="">
         {Object.entries(schemaInfo).map(([key, value]) => (
-          <button key={key} onClick={() => setSelectedSchema(key as SchemaInfoKey)}>
+          <button key={key} onClick={() => setSelectedSchema(key as SchemaInfoKey)} className="w-full">
             <YupItem title={value.title} desc={value.desc} />
           </button>
         ))}
