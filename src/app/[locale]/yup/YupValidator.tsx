@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 
 import Editor from '@monaco-editor/react';
+import { js as beautify } from 'js-beautify';
 import * as yup from 'yup';
 
 import { Button } from '@/components/ui/button';
@@ -20,16 +21,27 @@ const getSchemaString = (schema: SchemaInfoType) => {
 
   const constString = Object.entries(schema.constants || {})
     .map(([key, value]) => `const ${key} = ${value};`)
-    .join('\n');
+    .join('');
 
+  let code = '';
   if (constString) {
-    return `${constString}
-
-const schema = yup.object({\n${schemaString}\n});
-    `;
+    code = `${constString}\n\nconst schema = yup.object({\n${schemaString}\n});`;
+  } else {
+    code = `const schema = yup.object({\n${schemaString}\n});`;
   }
 
-  return `const schema = yup.object({\n${schemaString}\n});`;
+  try {
+    const formattedCode = beautify(code, {
+      indent_size: 2,
+      space_in_empty_paren: true,
+      preserve_newlines: true,
+      end_with_newline: true,
+    });
+    return formattedCode;
+  } catch (error) {
+    console.error('코드 포맷팅 실패:', error);
+    return code;
+  }
 };
 
 function YupValidator(props: { schema: SchemaInfoType }) {
