@@ -84,7 +84,6 @@ function YupValidator(props: { schema: SchemaInfoType }) {
       );
 
       const userSchema = createSchema(yup);
-      console.log('userSchema: ', userSchema);
       await userSchema.validate(inputs, { abortEarly: false });
       setErrors({});
       setIsValid(true);

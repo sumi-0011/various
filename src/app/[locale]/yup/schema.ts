@@ -62,6 +62,23 @@ export const schemaInfo: {
     .test('fileType', 'rest_api_file_upload_error', (value) => (value ? SUPPORTED_FORMATS.includes(value.type) : true))`,
     },
   },
+  conditionalValid1: {
+    title: 'Conditional Validation',
+    desc: 'admin input -> password required',
+    schema: {
+      user_type: `yup.string().required()`,
+      password: `yup.string().test({
+        name: 'admin-password-required',
+        message: '관리자는 비밀번호가 필요합니다',
+        test(value) {
+          if (this.parent.user_type === 'admin') {
+            return Boolean(value && value.trim().length > 0);
+          }
+          return true;
+        },
+      }) `,
+    },
+  },
 };
 
 export type SchemaInfoKey = keyof typeof schemaInfo;
