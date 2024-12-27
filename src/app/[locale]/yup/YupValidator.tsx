@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 
 import Editor from '@monaco-editor/react';
+import { Formik, Form, Field, FormikHelpers, useField, ErrorMessage } from 'formik';
 import { js as beautify } from 'js-beautify';
 import * as yup from 'yup';
 
@@ -44,66 +45,50 @@ const getSchemaString = (schema: SchemaInfoType) => {
   }
 };
 
+// 폼 값을 위한 인터페이스 추가
+interface FormValues {
+  username: string;
+  email: string;
+  password: string;
+  [key: string]: string;
+}
+
 function YupValidator(props: { schema: SchemaInfoType }) {
-  // 검증할 입력값들의 상태
-  const [inputs, setInputs] = useState({
-    username: '',
-    email: '',
-    password: '',
-  });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isValid, setIsValid] = useState(false);
-
-  // schemaCode를 state로 변경
   const [schemaCode, setSchemaCode] = useState(getSchemaString(props.schema));
+  const [validationError, setValidationError] = useState<string>('');
 
-  // 입력값 변경 핸들러
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setInputs((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const initialValues: FormValues = Object.keys(props.schema.schema).reduce((acc, key) => {
+    acc[key] = '';
+    return acc;
+  }, {} as FormValues);
 
-  // 스키마 변경 핸들러 추가
   const handleSchemaChange = (value: string) => {
     setSchemaCode(value);
   };
 
-  // 검증 실행 함수 수정
-  const handleValidate = async () => {
+  const handleSubmit = async (values: FormValues, actions: FormikHelpers<FormValues>) => {
     try {
-      // Function 생성자를 사용하여 동적으로 스키마 생성
       const createSchema = new Function(
         'yup',
         `${schemaCode}
-        return schema;
-      `
+        return schema;`
       );
 
       const userSchema = createSchema(yup);
-      await userSchema.validate(inputs, { abortEarly: false });
-      setErrors({});
-      setIsValid(true);
+      await userSchema.validate(values, { abortEarly: false });
+      setValidationError('');
+      actions.setStatus({ success: true });
     } catch (err) {
       if (err instanceof SyntaxError) {
-        setErrors({ schema: '스키마 문법이 올바르지 않습니다.' });
-        setIsValid(false);
-        return;
-      }
-
-      if (err instanceof yup.ValidationError) {
-        const newErrors: Record<string, string> = {};
+        setValidationError('스키마 문법이 올바르지 않습니다.');
+      } else if (err instanceof yup.ValidationError) {
         err.inner?.forEach((error) => {
           if (error.path) {
-            newErrors[error.path] = error.message;
+            actions.setFieldError(error.path, error.message);
           }
         });
-        setErrors(newErrors);
-        setIsValid(false);
       }
+      actions.setStatus({ success: false });
     }
   };
 
@@ -113,7 +98,6 @@ function YupValidator(props: { schema: SchemaInfoType }) {
         <CardTitle>사용자 정보 검증</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* 스키마 코드 표시 (읽기 전용) */}
         <div className="mb-6">
           <Label>검증 스키마 (수정 가능)</Label>
           <Editor
@@ -128,52 +112,48 @@ function YupValidator(props: { schema: SchemaInfoType }) {
               wordWrap: 'on',
             }}
           />
-          {errors.schema && <p className="mt-1 text-sm text-red-500">{errors.schema}</p>}
+          {validationError && <p className="mt-1 text-sm text-red-500">{validationError}</p>}
         </div>
 
-        {/* 입력 폼 */}
-        <div className="space-y-4">
-          {Object.entries(props.schema.schema).map(([key]) => (
-            <InputItem
-              value={inputs[key as keyof typeof inputs]}
-              onChange={handleInputChange}
-              error={errors[key as keyof typeof errors]}
-              id={key}
-              key={key}
-            />
-          ))}
+        <Formik initialValues={initialValues} onSubmit={handleSubmit}>
+          {({ status }) => (
+            <Form className="space-y-4">
+              {Object.entries(props.schema.schema).map(([key]) => (
+                <InputItem key={key} name={key} />
+              ))}
 
-          <Button onClick={handleValidate} className="w-full">
-            검증하기
-          </Button>
+              <Button type="submit" className="w-full">
+                검증하기
+              </Button>
 
-          {isValid && <div className="rounded-md bg-green-100 p-4 text-green-800">모든 입력값이 유효합니다!</div>}
-        </div>
+              {status?.success && (
+                <div className="rounded-md bg-green-100 p-4 text-green-800">모든 입력값이 유효합니다!</div>
+              )}
+            </Form>
+          )}
+        </Formik>
       </CardContent>
     </Card>
   );
 }
 
-export default YupValidator;
-
-function InputItem(props: {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  error: string;
-  id: string;
-}) {
+// InputItem 컴포넌트를 Formik Field로 변경
+function InputItem({ name }: { name: string }) {
+  const [, meta] = useField(name);
   return (
     <div className="space-y-2">
-      <Label htmlFor={props.id}>{props.id}</Label>
-      <Input
-        id={props.id}
-        name={props.id}
-        type="password"
-        value={props.value}
-        onChange={props.onChange}
-        className={cn(props.error ? 'border-red-500' : '')}
+      <Label htmlFor={name}>{name}</Label>
+      <Field
+        as={Input}
+        id={name}
+        name={name}
+        type={name === 'password' ? 'password' : 'text'}
+        className={cn(meta.error ? 'border-red-500' : '')}
       />
-      {props.error && <p className="text-sm text-red-500">{props.error}</p>}
+
+      <ErrorMessage name={name}>{(message) => <p className="text-sm text-red-500">{message}</p>}</ErrorMessage>
     </div>
   );
 }
+
+export default YupValidator;
