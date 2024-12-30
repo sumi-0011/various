@@ -11,7 +11,8 @@ declare function require(path: string): any;
 
 function App() {
   const [scale, setScale] = React.useState(2);
-  const [fileName, setFileName] = React.useState('');
+  const [prefix, setPrefix] = React.useState('');
+  const [frameName, setFrameName] = React.useState('');
   const [quality, setQuality] = React.useState(80);
   const [originalSize, setOriginalSize] = React.useState(0);
   const [convertedSize, setConvertedSize] = React.useState(0);
@@ -24,6 +25,9 @@ function App() {
       const msg = event.data.pluginMessage;
       if (msg.type === 'init-png-data') {
         setPngBytes(msg.bytes);
+        // frame 이름 설정
+        setFrameName(msg.frameName || '');
+
         // PNG 데이터로부터 미리보기 URL 생성
         const blob = new Blob([msg.bytes], { type: 'image/png' });
         const url = URL.createObjectURL(blob);
@@ -62,7 +66,9 @@ function App() {
     if (!pngBytes) return;
 
     try {
-      await exportWebP(pngBytes, fileName.trim(), quality, scale);
+      // prefix와 frameName을 조합하여 최종 파일명 생성
+      const finalFileName = prefix ? `${prefix}-${frameName}` : frameName;
+      await exportWebP(pngBytes, finalFileName.trim(), quality, scale);
       parent.postMessage({ pluginMessage: { type: 'export-complete' } }, '*');
     } catch (error) {
       console.error('내보내기 중 오류:', error);
@@ -102,13 +108,16 @@ function App() {
         </div>
 
         <div className="input-group">
-          <label>파일 이름 prefix</label>
-          <input
-            type="text"
-            value={fileName}
-            onChange={(e) => setFileName(e.target.value)}
-            placeholder="파일 이름을 입력하세요"
-          />
+          <label>File Name</label>
+          <div className="file-name-input">
+            <input type="text" value={prefix} onChange={(e) => setPrefix(e.target.value)} placeholder="Input Prefix" />
+            <input
+              type="text"
+              value={frameName}
+              onChange={(e) => setFrameName(e.target.value)}
+              placeholder="Input File Name"
+            />
+          </div>
         </div>
 
         <div className="input-group">

@@ -10,6 +10,7 @@ const sendPngData = async () => {
     figma.ui.postMessage({
       type: 'init-png-data',
       bytes: bytes,
+      frameName: node.name,
     });
   }
 };
