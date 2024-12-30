@@ -1,6 +1,6 @@
 {
-  "name": "WEBP 변환기",
-  "id": "webp-export",
+  "name": "Select Frame To Webp",
+  "id": "select-frame-to-webp",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/ui.html",

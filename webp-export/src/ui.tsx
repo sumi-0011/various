@@ -1,44 +1,33 @@
-/* eslint-disable jsx-a11y/label-has-associated-control */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-restricted-globals */
 import * as React from 'react';
 
 import { previewWebP, exportWebP } from './utils/webpConverter';
 import * as ReactDOM from 'react-dom/client';
 import './ui.css';
 
-declare function require(path: string): any;
-
 function App() {
+  const { originalSize, convertedSize, updatePreview } = usePreview();
+  const { pngBytes, frameName, previewUrl, setInitPngData } = useInitPngData();
+
   const [scale, setScale] = React.useState(2);
   const [prefix, setPrefix] = React.useState('');
-  const [frameName, setFrameName] = React.useState('');
   const [quality, setQuality] = React.useState(80);
-  const [originalSize, setOriginalSize] = React.useState(0);
-  const [convertedSize, setConvertedSize] = React.useState(0);
-  const [pngBytes, setPngBytes] = React.useState<Uint8Array | null>(null);
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [fileName, setFileName] = React.useState('');
 
-  // PNG 데이터를 받아오고 미리보기 생성하는 부분
+  React.useEffect(() => {
+    setFileName(frameName);
+  }, [frameName]);
+
   React.useEffect(() => {
     const messageHandler = (event: MessageEvent) => {
       const msg = event.data.pluginMessage;
       if (msg.type === 'init-png-data') {
-        setPngBytes(msg.bytes);
-        // frame 이름 설정
-        setFrameName(msg.frameName || '');
-
-        // PNG 데이터로부터 미리보기 URL 생성
-        const blob = new Blob([msg.bytes], { type: 'image/png' });
-        const url = URL.createObjectURL(blob);
-        setPreviewUrl(url);
+        setInitPngData(msg);
       }
     };
 
     window.addEventListener('message', messageHandler);
     return () => {
       window.removeEventListener('message', messageHandler);
-      // Clean up URL object
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
@@ -49,25 +38,14 @@ function App() {
   React.useEffect(() => {
     if (!pngBytes) return;
 
-    const updatePreview = async () => {
-      try {
-        const { originalSize, convertedSize } = await previewWebP(pngBytes, quality, scale);
-        setOriginalSize(originalSize);
-        setConvertedSize(convertedSize);
-      } catch (error) {
-        console.error('미리보기 생성 중 오류:', error);
-      }
-    };
-
-    updatePreview();
+    updatePreview({ pngBytes, quality, scale });
   }, [pngBytes, quality, scale]);
 
   const onExport = async () => {
     if (!pngBytes) return;
 
     try {
-      // prefix와 frameName을 조합하여 최종 파일명 생성
-      const finalFileName = prefix ? `${prefix}-${frameName}` : frameName;
+      const finalFileName = prefix ? `${prefix}-${fileName}` : fileName;
       await exportWebP(pngBytes, finalFileName.trim(), quality, scale);
       parent.postMessage({ pluginMessage: { type: 'export-complete' } }, '*');
     } catch (error) {
@@ -90,15 +68,15 @@ function App() {
             <img src={previewUrl} alt="선택된 프레임 미리보기" className="preview-image" />
           ) : (
             <div className="preview-placeholder">
-              <span>프레임을 선택해주세요</span>
+              <span>Please select a frame</span>
             </div>
           )}
         </div>
 
-        <p>선택한 이미지를 WEBP 형식으로 변환합니다.</p>
+        <p>Convert selected image to WEBP format.</p>
 
         <div className="input-group">
-          <label>배수 설정</label>
+          <label>Scale</label>
           <select value={scale} onChange={(e) => setScale(Number(e.target.value))}>
             <option value={1}>1x</option>
             <option value={2}>2x</option>
@@ -113,15 +91,15 @@ function App() {
             <input type="text" value={prefix} onChange={(e) => setPrefix(e.target.value)} placeholder="Input Prefix" />
             <input
               type="text"
-              value={frameName}
-              onChange={(e) => setFrameName(e.target.value)}
+              value={fileName}
+              onChange={(e) => setFileName(e.target.value)}
               placeholder="Input File Name"
             />
           </div>
         </div>
 
         <div className="input-group">
-          <label>변환 품질 ({quality}%)</label>
+          <label>Quality ({quality}%)</label>
           <input type="range" min="0" max="100" value={quality} onChange={(e) => setQuality(Number(e.target.value))} />
         </div>
 
@@ -130,8 +108,8 @@ function App() {
             <p>원본 크기: {(originalSize / 1024).toFixed(1)}KB</p>
             {convertedSize > 0 && (
               <>
-                <p>변환 크기: {(convertedSize / 1024).toFixed(1)}KB</p>
-                <p>압축률: {((1 - convertedSize / originalSize) * 100).toFixed(1)}%</p>
+                <p>Converted Size: {(convertedSize / 1024).toFixed(1)}KB</p>
+                <p>Compression Rate: {((1 - convertedSize / originalSize) * 100).toFixed(1)}%</p>
               </>
             )}
           </div>
@@ -139,12 +117,52 @@ function App() {
       </section>
       <footer>
         <button className="brand" onClick={onExport}>
-          변환하기
+          Convert
         </button>
-        <button onClick={onCancel}>취소</button>
+        <button onClick={onCancel}>Cancel</button>
       </footer>
     </main>
   );
 }
 
 ReactDOM.createRoot(document.getElementById('react-page')).render(<App />);
+
+const usePreview = () => {
+  const [originalSize, setOriginalSize] = React.useState(0);
+  const [convertedSize, setConvertedSize] = React.useState(0);
+
+  const updatePreview = async ({
+    pngBytes,
+    quality,
+    scale,
+  }: {
+    pngBytes: Uint8Array;
+    quality: number;
+    scale: number;
+  }) => {
+    const { originalSize, convertedSize } = await previewWebP(pngBytes, quality, scale);
+    setOriginalSize(originalSize);
+    setConvertedSize(convertedSize);
+  };
+
+  return { originalSize, convertedSize, updatePreview };
+};
+
+const useInitPngData = () => {
+  const [pngBytes, setPngBytes] = React.useState<Uint8Array | null>(null);
+  const [frameName, setFrameName] = React.useState('');
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+
+  const setInitPngData = ({ bytes, frameName }: { bytes: Uint8Array; frameName: string }) => {
+    setPngBytes(bytes);
+    // frame 이름 설정
+    setFrameName(frameName || '');
+
+    // PNG 데이터로부터 미리보기 URL 생성
+    const blob = new Blob([bytes], { type: 'image/png' });
+    const url = URL.createObjectURL(blob);
+    setPreviewUrl(url);
+  };
+
+  return { pngBytes, frameName, previewUrl, setInitPngData };
+};
