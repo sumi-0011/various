@@ -39,12 +39,12 @@ export async function previewWebP(
 }
 
 // 실제 내보내기용 함수
-export async function exportWebP(
+export const exportWebP = async (
   pngBytes: Uint8Array,
   fileName: string,
   quality: number,
   scale: number
-): Promise<void> {
+): Promise<Blob> => {
   const blob = new Blob([pngBytes], { type: 'image/png' });
   const image = new Image();
   image.src = URL.createObjectURL(blob);
@@ -63,13 +63,7 @@ export async function exportWebP(
     canvas.toBlob(
       (webpBlob) => {
         if (webpBlob) {
-          const url = URL.createObjectURL(webpBlob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName;
-          a.click();
-          URL.revokeObjectURL(url);
-          resolve();
+          resolve(webpBlob);
         } else {
           reject(new Error('WebP 변환 실패'));
         }
@@ -78,4 +72,4 @@ export async function exportWebP(
       quality / 100
     );
   });
-}
+};

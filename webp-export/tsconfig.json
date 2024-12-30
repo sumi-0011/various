@@ -2,7 +2,9 @@
   "compilerOptions": {
     "target": "es6",
     "jsx": "react",
-    "typeRoots": ["./node_modules/@types", "./node_modules/@figma"]
+    "typeRoots": ["./node_modules/@types", "./node_modules/@figma"],
+    "moduleResolution": "node",
+    "esModuleInterop": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

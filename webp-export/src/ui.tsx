@@ -3,6 +3,7 @@ import * as React from 'react';
 import { previewWebP, exportWebP } from './utils/webpConverter';
 import * as ReactDOM from 'react-dom/client';
 import './ui.css';
+import { downloadFile, downloadZip } from './utils/downFile';
 
 function App() {
   const { originalSize, convertedSize, updatePreview } = usePreview();
@@ -12,6 +13,8 @@ function App() {
   const [prefix, setPrefix] = React.useState('');
   const [quality, setQuality] = React.useState(80);
   const [fileName, setFileName] = React.useState('');
+  const [isExportWebP] = React.useState(true);
+  const [exportPNG, setExportPNG] = React.useState(false);
 
   React.useEffect(() => {
     setFileName(frameName);
@@ -19,9 +22,8 @@ function App() {
 
   React.useEffect(() => {
     const messageHandler = (event: MessageEvent) => {
-      const msg = event.data.pluginMessage;
-      if (msg.type === 'init-png-data') {
-        setInitPngData(msg);
+      if (event.data?.pluginMessage?.type === 'init-png-data') {
+        setInitPngData(event.data.pluginMessage);
       }
     };
 
@@ -46,7 +48,36 @@ function App() {
 
     try {
       const finalFileName = prefix ? `${prefix}-${fileName}` : fileName;
-      await exportWebP(pngBytes, finalFileName.trim(), quality, scale);
+      const trimmedFileName = finalFileName.trim();
+      const files: { blob: Blob; fileName: string }[] = [];
+
+      if (isExportWebP) {
+        console.info('WebP 내보내기 시작');
+        const webpBlob = await exportWebP(pngBytes, trimmedFileName, quality, scale);
+        files.push({ blob: webpBlob, fileName: `${trimmedFileName}.webp` });
+        console.info('WebP 내보내기 완료');
+      }
+
+      if (exportPNG) {
+        console.info('PNG 내보내기 시작');
+        const pngBlob = new Blob([pngBytes], { type: 'image/png' });
+        files.push({ blob: pngBlob, fileName: `${trimmedFileName}.png` });
+        console.info('PNG 내보내기 완료');
+      }
+
+      // WebP와 PNG 모두 선택된 경우에만 ZIP으로 다운로드
+      if (files.length >= 2) {
+        const zipFileName = prefix ? `${prefix}-${fileName}` : fileName;
+
+        await downloadZip({
+          files,
+          fileName: zipFileName,
+        });
+      } else if (files.length === 1) {
+        // 하나의 포맷만 선택된 경우 직접 다운로드
+        await downloadFile(files[0].blob, files[0].fileName);
+      }
+
       parent.postMessage({ pluginMessage: { type: 'export-complete' } }, '*');
     } catch (error) {
       console.error('내보내기 중 오류:', error);
@@ -101,6 +132,20 @@ function App() {
         <div className="input-group">
           <label>Quality ({quality}%)</label>
           <input type="range" min="0" max="100" value={quality} onChange={(e) => setQuality(Number(e.target.value))} />
+        </div>
+
+        <div className="input-group">
+          <label>Export Format</label>
+          <div className="checkbox-group">
+            <label>
+              <input type="checkbox" checked={true} disabled={true} readOnly={true} />
+              WebP
+            </label>
+            <label>
+              <input type="checkbox" checked={exportPNG} onChange={(e) => setExportPNG(e.target.checked)} />
+              PNG
+            </label>
+          </div>
         </div>
 
         {originalSize > 0 && (

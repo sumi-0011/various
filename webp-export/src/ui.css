@@ -222,3 +222,19 @@ input[type='range'] {
   grid-template-columns: 1fr 2fr;
   gap: 8px;
 }
+
+.checkbox-group {
+  display: flex;
+  gap: 16px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.checkbox-group input[type='checkbox'] {
+  margin: 0;
+}
