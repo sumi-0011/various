@@ -1,43 +1,28 @@
 /// <reference types="@figma/plugin-typings" />
 
-figma.showUI(__html__, { themeColors: true, height: 300 });
+figma.showUI(__html__, { width: 320, height: 480 });
 
-figma.ui.onmessage = async (msg) => {
-  console.log('msg: ', msg);
-  if (msg.type === 'export-webp') {
-    console.log("msg.type === 'export-webp': ", msg.type === 'export-webp');
-    console.log('figma.currentPage: ', figma.currentPage);
-    const selection = figma.currentPage.selection;
-    console.log('selection: ', selection);
+// 선택된 노드의 PNG 데이터를 UI로 전송
+const sendPngData = async () => {
+  const node = figma.currentPage.selection[0];
+  if (node) {
+    const bytes = await node.exportAsync({ format: 'PNG' });
+    figma.ui.postMessage({
+      type: 'init-png-data',
+      bytes: bytes,
+    });
+  }
+};
 
-    if (selection.length === 0) {
-      figma.notify('요소를 선택해주세요!');
-      return;
-    }
+figma.on('selectionchange', sendPngData);
 
-    try {
-      for (const node of selection) {
-        const settings: ExportSettingsImage = {
-          format: 'PNG',
-          constraint: {
-            type: 'SCALE',
-            value: 1,
-          },
-        };
+// 초기 데이터 전송
+sendPngData();
 
-        const bytes = await node.exportAsync(settings);
-
-        // UI로 바이트 데이터 전송
-        figma.ui.postMessage({
-          type: 'export-complete',
-          fileName: `${node.name}.webp`,
-          bytes: bytes,
-        });
-      }
-
-      figma.notify('내보내기가 완료되었습니다!');
-    } catch (error) {
-      figma.notify('내보내기 중 오류가 발생했습니다.');
-    }
+figma.ui.onmessage = (msg) => {
+  if (msg.type === 'export-complete') {
+    figma.notify('WebP 내보내기가 완료되었습니다.');
+  } else if (msg.type === 'cancel') {
+    figma.closePlugin();
   }
 };
