@@ -1,14 +1,14 @@
 {
-  "name": "webpack-react",
+  "name": "select-frame-to-webp",
   "version": "1.0.0",
-  "description": "",
+  "description": "Select Frame To Webp",
   "main": "code.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack --mode=development --watch",
     "build": "webpack --mode=production"
   },
-  "author": "Figma",
+  "author": "sumi-0011",
   "license": "MIT",
   "devDependencies": {
     "@figma/plugin-typings": "^1.106.0",

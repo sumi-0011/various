@@ -1,6 +1,6 @@
 /// <reference types="@figma/plugin-typings" />
 
-figma.showUI(__html__, { width: 320, height: 480 });
+figma.showUI(__html__, { width: 320, height: 600 });
 
 // 선택된 노드의 PNG 데이터를 UI로 전송
 const sendPngData = async () => {

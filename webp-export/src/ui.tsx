@@ -16,18 +16,29 @@ function App() {
   const [originalSize, setOriginalSize] = React.useState(0);
   const [convertedSize, setConvertedSize] = React.useState(0);
   const [pngBytes, setPngBytes] = React.useState<Uint8Array | null>(null);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
-  // PNG 데이터를 받아오는 부분
+  // PNG 데이터를 받아오고 미리보기 생성하는 부분
   React.useEffect(() => {
     const messageHandler = (event: MessageEvent) => {
       const msg = event.data.pluginMessage;
       if (msg.type === 'init-png-data') {
         setPngBytes(msg.bytes);
+        // PNG 데이터로부터 미리보기 URL 생성
+        const blob = new Blob([msg.bytes], { type: 'image/png' });
+        const url = URL.createObjectURL(blob);
+        setPreviewUrl(url);
       }
     };
 
     window.addEventListener('message', messageHandler);
-    return () => window.removeEventListener('message', messageHandler);
+    return () => {
+      window.removeEventListener('message', messageHandler);
+      // Clean up URL object
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
   }, []);
 
   // 품질이나 스케일이 변경될 때마다 미리보기 업데이트
@@ -65,9 +76,19 @@ function App() {
   return (
     <main>
       <header>
-        <h2>WEBP 변환기</h2>
+        <h2>Select Frame To Webp</h2>
       </header>
       <section>
+        <div className="preview-container">
+          {previewUrl ? (
+            <img src={previewUrl} alt="선택된 프레임 미리보기" className="preview-image" />
+          ) : (
+            <div className="preview-placeholder">
+              <span>프레임을 선택해주세요</span>
+            </div>
+          )}
+        </div>
+
         <p>선택한 이미지를 WEBP 형식으로 변환합니다.</p>
 
         <div className="input-group">
