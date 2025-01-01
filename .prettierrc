@@ -9,5 +9,6 @@
   "jsxBracketSameLine": false,
 
   "tailwindFunctions": ["cn", "clsx"],
-  "plugins": ["prettier-plugin-tailwindcss"]
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "tailwindClassesOrder": true
 }
