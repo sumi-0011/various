@@ -2,26 +2,11 @@
 
 import * as React from 'react';
 
-import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  ImageIcon,
-  Map,
-  PieChart,
-  Settings2,
-  SmileIcon,
-  SquareTerminal,
-} from 'lucide-react';
+import { GalleryVerticalEnd, ImageIcon, SmileIcon } from 'lucide-react';
 
 import { NavMain } from '@/components/Layout/SideBar/NavMain';
 import { NavProjects } from '@/components/Layout/SideBar/NavProjects';
-import { NavUser } from '@/components/Layout/SideBar/NavUser';
-import { TeamSwitcher } from '@/components/Layout/SideBar/TeamSwitcher';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarRail } from '@/components/ui/sidebar';
 
 // This is sample data.
 const data = {
@@ -34,7 +19,6 @@ const data = {
     {
       name: 'space',
       logo: GalleryVerticalEnd,
-      // plan: 'Enterprise',
     },
   ],
   navMain: [
@@ -44,6 +28,10 @@ const data = {
       icon: ImageIcon,
       isActive: false,
       items: [
+        {
+          title: 'Home',
+          url: 'https://thumbnail.ssumi.space/',
+        },
         {
           title: 'Gallery',
           url: 'https://thumbnail.ssumi.space/gallery',

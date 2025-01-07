@@ -1,3 +1,5 @@
+import { redirect } from '@i18n/routing';
+
 export default function Page() {
-  return <div>Hello</div>;
+  redirect({ href: '/maker', locale: 'en-US' });
 }
